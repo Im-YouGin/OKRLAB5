@@ -1,5 +1,5 @@
+import './app.js'
 import '../styles.css'
-
 import '../imgs/1dis.jpg'
 import '../imgs/2dis.jpg'
 import '../imgs/3dis.jpg'
@@ -23,5 +23,3 @@ import '../imgs/spinachfeta.jpg'
 import '../imgs/toscana.jpg'
 import '../imgs/veggiefeast.jpg'
 import '../imgs/wowweekend.jpg'
-
-import './app.js'

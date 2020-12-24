@@ -5,9 +5,7 @@
 export function getCartSum (obj) {
   let sum = 0
   for (const el in obj) {
-    if (obj.hasOwnProperty(el)) {
-      sum += parseFloat(obj[el])
-    }
+    sum += obj[el]
   }
   return sum
 }
@@ -149,14 +147,19 @@ class ProductsManager {
   }
 
   renderProds () {
-    this.el.innerHTML = ''
+    if (this.el) {
+      this.el.innerHTML = ''
+    }
+
     this.prods.forEach(prod => {
       this.renderProd(prod.getElement())
     })
   }
 
   renderProd (prodEl) {
-    this.el.appendChild(prodEl)
+    if (this.el) {
+      this.el.appendChild(prodEl)
+    }
   }
 }
 

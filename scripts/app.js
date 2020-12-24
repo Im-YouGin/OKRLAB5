@@ -1,5 +1,4 @@
 
-
 import {
   ActionsManager,
   actions
@@ -20,13 +19,43 @@ import { products } from './dbapi.js'
 import { CartManager } from './cartProdTools.js'
 
 document.onreadystatechange = function () {
-  if (document.readyState !== 'complete') {
-    document.querySelector('.page-wrapper').style.visibility = 'hidden'
-    document.querySelector('#loader').style.visibility = 'visible'
-  } else {
-    document.querySelector('#loader').style.display = 'none'
-    document.querySelector('.page-wrapper').style.visibility = 'visible'
+  try {
+    if (document.readyState !== 'complete') {
+      document.querySelector('.page-wrapper').style.visibility = 'hidden'
+      document.querySelector('#loader').style.visibility = 'visible'
+    } else {
+      document.querySelector('#loader').style.display = 'none'
+      document.querySelector('.page-wrapper').style.visibility = 'visible'
+    }
+  } catch (error) {
+
   }
+}
+
+const cart = document.querySelector('.shopping-cart')
+if (cart) {
+  cart.setAttribute('onclick', "location.href='#cart'")
+}
+
+const hamburger = document.querySelector('.hamburger')
+const mobileMenu = document.querySelector('#header .nav-bar .nav-list ul')
+const menuItem = document.querySelectorAll('#header .nav-bar .nav-list ul li a')
+
+if (hamburger) {
+  hamburger.addEventListener('click', () => {
+    console.log(1)
+    hamburger.classList.toggle('active')
+    mobileMenu.classList.toggle('active')
+  })
+}
+
+if (menuItem) {
+  menuItem.forEach((item) => {
+    item.addEventListener('click', () => {
+      hamburger.classList.toggle('active')
+      mobileMenu.classList.toggle('active')
+    })
+  })
 }
 
 const actionsSection = (
@@ -257,12 +286,6 @@ const submittedTemplate = (
     `
 )
 
-const errMsg = (
-    `
-    <div class="section-title">Something went wrong :(</div>
-    `
-)
-
 function formatDate (date) {
   const d = new Date(date)
   let month = '' + (d.getMonth() + 1)
@@ -278,12 +301,10 @@ function formatDate (date) {
 function calcTotalCost (existing) {
   let totalCost = 0
   for (const key in existing) {
-    if (existing.hasOwnProperty(key)) {
-      var t = key.split(',')[0]
-      const dd = products.filter((prod) => { return prod.title == t })[0]
-      const price = parseFloat(dd.price)
-      totalCost = totalCost + price * existing[key]
-    }
+    const t = key.split(',')[0]
+    const dd = products.filter((prod) => { return prod.title === t })[0]
+    const price = parseFloat(dd.price)
+    totalCost = totalCost + price * existing[key]
   }
   totalCost = Number(totalCost.toFixed(3))
   return totalCost
@@ -307,17 +328,23 @@ setInterval(function () {
 location.hash = '#'
 
 const pageCont = document.querySelector('.main-container')
-pageCont.innerHTML = homeSection
 
-const bestPriceManager = new ProductsManager({
-  el: document.querySelector('#best-price .product-list'),
-  products: bestPriceProds
-})
+function renderHome () {
+  if (pageCont) {
+    pageCont.innerHTML = homeSection
+  }
 
-const recommendationsManager = new ProductsManager({
-  el: document.querySelector('#recommendations .product-list'),
-  products: recommendedProds
-})
+  new ProductsManager({
+    el: document.querySelector('#best-price .product-list'),
+    products: bestPriceProds
+  })
+
+  new ProductsManager({
+    el: document.querySelector('#recommendations .product-list'),
+    products: recommendedProds
+  })
+}
+renderHome()
 
 const allowedProdDetHash = products.map(x => x.prodUrl)
 const allowedProdCats = products.map(x => 'category/' + x.category)
@@ -325,44 +352,43 @@ const allowedProdCats = products.map(x => 'category/' + x.category)
 function hashChange () {
   const hash = window.location.hash.split('#')[1]
   const pageCont = window.document.querySelector('.main-container')
-  var existing = localStorage.getItem('cart')
+  let existing = localStorage.getItem('cart')
   existing = existing ? JSON.parse(existing) : {}
-  document.querySelector('.shopping-cart-number').innerHTML = getCartSum(existing)
+  const cartNumber = document.querySelector('.shopping-cart-number')
+  if (cartNumber) {
+    cartNumber.innerHTML = getCartSum(existing)
+  }
   // ACTIONS PAGE
-  if (hash == 'actions') {
+  if (hash === 'actions') {
     pageCont.innerHTML = actionsSection
-    const actionsManager = new ActionsManager({
+    new ActionsManager({
       el: window.document.querySelector('#actions .all-actions'),
       products: actions
     })
-  }
-  // ALL PRODUCTS PAGE
-  else if (hash == 'products') {
+  } else if (hash === 'products') {
     pageCont.innerHTML = productsSection
 
-    const classicPizzaManager = new ProductsManager({
+    new ProductsManager({
       el: window.document.querySelector('#classic-pizza .product-list'),
       products: classicPizzaProds
     })
 
-    const permiumPizzaManager = new ProductsManager({
+    new ProductsManager({
       el: window.document.querySelector('#premium-pizza .product-list'),
       products: premiumPizzaProds
     })
 
-    const vegetarianPizzaManager = new ProductsManager({
+    new ProductsManager({
       el: window.document.querySelector('#legend-pizza .product-list'),
       products: legendPizzaProds
     })
 
-    const customPizzaManger = new ProductsManager({
+    new ProductsManager({
       el: window.document.querySelector('#custom-pizza .product-list'),
       products: customPizzaProds
     })
-  }
-  // PRODUCT DETAIL PAGE
-  else if (allowedProdDetHash.includes(hash)) {
-    const prod = products.filter((prod) => { return prod.prodUrl == hash })[0]
+  } else if (allowedProdDetHash.includes(hash)) {
+    const prod = products.filter((prod) => { return prod.prodUrl === hash })[0]
     const tmpDet = prodDetSection.replace('{{imgPath}}', prod.imgPath).replace('{{title}}', prod.title).replace('{{desc}}', prod.desc).replace('{{price}}', prod.price).replace('{{href}}', prod.prodUrl)
     pageCont.innerHTML = tmpDet
 
@@ -382,68 +408,62 @@ function hashChange () {
       localStorage.setItem('cart', JSON.stringify(existing))
       document.querySelector('.shopping-cart-number').innerHTML = getCartSum(existing)
     }
-  }
-  // CATEGORY PRODUCTS PAGE
-  else if (allowedProdCats.includes(hash)) {
+  } else if (allowedProdCats.includes(hash)) {
     const cat = hash.split('/')[1]
     const tmpCat = prodByCatSection.replace(/{{cat}}/g, cat)
-    const tmpProds = products.filter((prod) => { return prod.category == cat })
+    const tmpProds = products.filter((prod) => { return prod.category === cat })
     pageCont.innerHTML = tmpCat
 
-    const tmpManager = new ProductsManager({
+    new ProductsManager({
       el: window.document.querySelector('#{{cat}}-pizza .product-list'.replace('{{cat}}', cat)),
       products: tmpProds
     })
-  }
-  // CART PAGE
-  else if (hash == 'cart') {
-    pageCont.innerHTML = cartProdSection
-    document.querySelector('.submit-btn').setAttribute('onclick', "location.href='#order'")
-    var existing = localStorage.getItem('cart')
-    existing = existing ? JSON.parse(existing) : {}
-    const a = getCartSum(existing)
+  } else if (hash === 'cart') {
+    if (pageCont) {
+      pageCont.innerHTML = cartProdSection
+      document.querySelector('.submit-btn').setAttribute('onclick', "location.href='#order'")
+      existing = localStorage.getItem('cart')
+      existing = existing ? JSON.parse(existing) : {}
+      const a = getCartSum(existing)
 
-    const totalCost = calcTotalCost(existing)
-    document.querySelector('.cart-total-cost').innerHTML = 'Total cost: ' + Number(totalCost.toFixed(3)).toString()
+      const totalCost = calcTotalCost(existing)
+      document.querySelector('.cart-total-cost').innerHTML = 'Total cost: ' + Number(totalCost.toFixed(3)).toString()
+      if (!a) {
+        pageCont.innerHTML = (
+                  `
+                  <div class="cart-container">
+                      <div class="cart-title">Your Cart is Empty</div>
+                  
+                  </div>
+                  `
+        )
+      }
 
-    if (!a) {
-      pageCont.innerHTML = (
-                `
-                <div class="cart-container">
-                    <div class="cart-title">Your Cart is Empty</div>
-                
-                </div>
-                `
-      )
       // window.document.querySelector('.order-submit-btn').innerHTML = '';
     }
     const cartProds = []
     for (const key in existing) {
-      if (existing.hasOwnProperty(key)) {
-        var t = key.split(',')[0]
-        const features = key.split(',').slice(1).join(', ')
-        const pr = {}
-        const dd = products.filter((prod) => { return prod.title == t })[0]
-        Object.assign(pr, dd)
-        pr.features = features
-        pr.quatity = existing[key]
-        cartProds.push(pr)
-      }
+      const t = key.split(',')[0]
+      const features = key.split(',').slice(1).join(', ')
+      const pr = {}
+      const dd = products.filter((prod) => { return prod.title === t })[0]
+      Object.assign(pr, dd)
+      pr.features = features
+      pr.quatity = existing[key]
+      cartProds.push(pr)
     }
-    const tmpManager = new CartManager({
+    new CartManager({
       el: window.document.querySelector('.cart-container__body'),
       products: cartProds
     })
-  }
-  // ORDER FORM PAGE
-  else if (hash == 'order') {
+  } else if (hash === 'order') {
     const mindt = formatDate(new Date())
     let maxdt = new Date()
     maxdt.setDate(maxdt.getDate() + 7)
     maxdt = formatDate(maxdt)
     pageCont.innerHTML = checkoutForm.replace('{{minDate}}', mindt).replace('{{minDate}}', maxdt)
-    const check_form = document.querySelector('#checkout-form')
-    check_form.addEventListener('submit', function (event) {
+    const checkForm = document.querySelector('#checkout-form')
+    checkForm.addEventListener('submit', function (event) {
       event.preventDefault()
       const fname = document.querySelector('#FirstName').value
       const lname = document.querySelector('#LastName').value
@@ -491,22 +511,17 @@ function hashChange () {
           pageCont.innerHTML = tmpTpl
           localStorage.setItem('cart', JSON.stringify({}))
         })
-        .catch((error) => {
-          pageCont.innerHTML = errMsg
-        })
     }, false)
-  }
-  // HOME PAGE
-  else {
+  } else {
     location.hash = '#'
     pageCont.innerHTML = homeSection
 
-    const bestPriceManager = new ProductsManager({
+    new ProductsManager({
       el: document.querySelector('#best-price .product-list'),
       products: bestPriceProds
     })
 
-    const recommendationsManager = new ProductsManager({
+    new ProductsManager({
       el: document.querySelector('#recommendations .product-list'),
       products: recommendedProds
     })
@@ -524,25 +539,4 @@ window.addEventListener('load', function () {
   document.querySelector('.shopping-cart-number').innerHTML = getCartSum(existing)
 })
 
-document.querySelector('.shopping-cart').setAttribute('onclick', "location.href='#cart'")
-
-document.querySelector('.shopping-cart').setAttribute('onclick', "location.href='#cart'")
-
-const hamburger = document.querySelector('.hamburger')
-const mobile_menu = document.querySelector('#header .nav-bar .nav-list ul')
-const menu_item = document.querySelectorAll('#header .nav-bar .nav-list ul li a')
-const header = document.querySelector('#header .container')
-
-hamburger.addEventListener('click', () => {
-  hamburger.classList.toggle('active')
-  mobile_menu.classList.toggle('active')
-})
-
-menu_item.forEach((item) => {
-  item.addEventListener('click', () => {
-    hamburger.classList.toggle('active')
-    mobile_menu.classList.toggle('active')
-  })
-})
-
-export { productsSection, cartProdSection, pageCont, hashChange, calcTotalCost }
+export { productsSection, cartProdSection, pageCont, hashChange, calcTotalCost, renderHome, formatDate }

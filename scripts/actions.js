@@ -54,5 +54,5 @@ class ActionsManager {
 }
 
 const actions = JSON.parse(Get('https://my-json-server.typicode.com/Im-YouGin/Pizzeria/actions'))
-
+// console.log(actions)
 export { ActionsManager, actions, ProductCard }

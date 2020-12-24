@@ -113,18 +113,16 @@ class ProductCard {
       const cartProds = []
       for (const key in this.existing) {
         // check if the property/key is defined in the object itself, not in parent
-        if (this.existing.hasOwnProperty(key)) {
-          var t = key.split(',')[0]
-          const features = key.split(',').slice(1).join(', ')
-          const pr = products.filter((prod) => { return prod.title == t })[0]
-          pr.features = features
-          pr.quatity = this.existing[key]
-          cartProds.push(pr)
-        }
+        const t = key.split(',')[0]
+        const features = key.split(',').slice(1).join(', ')
+        const pr = products.filter((prod) => { return prod.title === t })[0]
+        pr.features = features
+        pr.quatity = this.existing[key]
+        cartProds.push(pr)
       }
 
       if (cartProds.length > 0) {
-        const tmpManager = new CartManager({
+        new CartManager({
           el: window.document.querySelector('.cart-container__body'),
           products: cartProds
         })
@@ -150,7 +148,9 @@ class CartManager {
   }
 
   renderProds () {
-    this.el.innerHTML = ''
+    if (this.el) {
+      this.el.innerHTML = ''
+    }
     this.prods.forEach(prod => {
       this.renderProd(prod.getElement())
     })
